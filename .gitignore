@@ -1,0 +1,6 @@
+.exe
+.vscode/
+bin/
+vendor/
+go.sum
+configs/config.yaml (如果你想保密密码)
