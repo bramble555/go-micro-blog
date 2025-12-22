@@ -1,0 +1,17 @@
+server:
+  port: "8080"
+  mode: "debug"
+
+mysql:
+  host: "127.0.0.1"
+  port: "3306"
+  user: "root"
+  password: 123456
+  dbname: "go_micro_blog"
+
+logger:
+  level: "debug"
+  filename: "tmp/logs/app.log"
+  max_size: 10
+  max_age: 30
+  max_backups: 5
