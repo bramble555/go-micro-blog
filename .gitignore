@@ -1,6 +1,16 @@
-.exe
-.vscode/
+# 编译产物
+*.exe
 bin/
-vendor/
-go.sum
-configs/config.yaml (如果你想保密密码)
+
+# IDE 配置
+.vscode/
+.idea/
+
+# 依赖管理 (Go 建议提交 go.sum，不要排除它)
+# go.sum
+
+# 临时文件
+.hintrc
+
+# 敏感配置文件
+configs/config.yaml
