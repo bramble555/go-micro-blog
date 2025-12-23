@@ -2,14 +2,13 @@ package model
 
 import "time"
 
-type Comment struct {
+type Message struct {
 	ID        int64     `gorm:"primaryKey"`
-	ArticleID int64     `gorm:"column:article_id;index"`
 	VisitorID string    `gorm:"column:visitor_id;type:varchar(64)"`
 	Content   string    `gorm:"column:content;type:varchar(500)"`
 	CreatedAt time.Time `gorm:"column:created_at"`
 }
 
-func (Comment) TableName() string {
-	return "comments"
+func (Message) TableName() string {
+	return "messages"
 }

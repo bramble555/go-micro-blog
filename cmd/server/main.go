@@ -57,6 +57,9 @@ func main() {
 	if err != nil {
 		global.Log.Fatal("数据库初始化失败", zap.Error(err))
 	}
+	// 初始化雪花算法
+	global.InitSnowflake(1)
+
 	// 注册路由
 	router.Register(r)
 

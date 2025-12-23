@@ -14,3 +14,8 @@ bin/
 
 # 敏感配置文件
 configs/config.yaml
+
+# 日志文件
+logs/
+*.log
+/tmp/logs/

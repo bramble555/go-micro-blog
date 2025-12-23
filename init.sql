@@ -1,0 +1,48 @@
+
+-- 用户表
+CREATE TABLE users (
+    id BIGINT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 文章表
+CREATE TABLE articles (
+    id BIGINT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    summary VARCHAR(500),
+    content LONGTEXT NOT NULL,
+    view_count BIGINT DEFAULT 0,
+    status TINYINT DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 评论表
+CREATE TABLE comments (
+    id BIGINT PRIMARY KEY,
+    article_id BIGINT NOT NULL,
+    visitor_id VARCHAR(64) NOT NULL,
+    content VARCHAR(500) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_article_id (article_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 点赞表
+CREATE TABLE likes (
+    id BIGINT PRIMARY KEY,
+    article_id BIGINT NOT NULL,
+    visitor_id VARCHAR(64) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_article_id (article_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 留言表
+CREATE TABLE messages (
+    id BIGINT PRIMARY KEY,
+    visitor_id VARCHAR(64) NOT NULL,
+    content VARCHAR(500) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
