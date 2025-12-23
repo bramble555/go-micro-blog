@@ -5,28 +5,10 @@ import (
 
 	"go-micro-blog/global"
 	"go-micro-blog/internal/model"
-
-	"gorm.io/gorm"
 )
 
-// ArticleService 文章服务
-type ArticleService struct {
-	db *gorm.DB
-}
-
-// NewArticleService 构造函数（依赖注入）
-func NewArticleService() *ArticleService {
-	return &ArticleService{
-		db: global.DB,
-	}
-}
-
-// CreateArticle 创建文章（Snowflake + GORM 的第一次结合）
-func (s *ArticleService) CreateArticle(
-	title string,
-	summary string,
-	content string,
-) (*model.Article, error) {
+// CreateArticle 创建文章
+func CreateArticle(title string, summary string, content string) (*model.Article, error) {
 
 	// 1️⃣ 基本参数校验
 	if title == "" || content == "" {
@@ -44,7 +26,7 @@ func (s *ArticleService) CreateArticle(
 	}
 
 	// 3️⃣ 使用 GORM 写入数据库
-	if err := s.db.Create(article).Error; err != nil {
+	if err := global.DB.Create(article).Error; err != nil {
 		return nil, err
 	}
 

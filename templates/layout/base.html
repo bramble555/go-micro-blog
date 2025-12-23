@@ -1,34 +1,16 @@
-{{ define "base" }}
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 
 <head>
-    <!-- charset 必须是 head 中第一个元素 -->
-    <meta charset="UTF-8">
-
-    <!-- 浏览器兼容性 -->
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-
-    <!-- 响应式 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>{{ .Title }} - Go Micro Blog</title>
-
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>{{ .Title }}</title>
 </head>
 
-<body class="bg-gray-100 text-gray-800">
+<body>
+    <nav>这是导航栏</nav>
 
-    {{ template "header" . }}
+    {{ template "content" . }}
 
-    <main class="max-w-4xl mx-auto px-4 py-8">
-        {{ block "content" . }}{{ end }}
-    </main>
-
-    {{ template "footer" . }}
-
+    <footer>这是页脚</footer>
 </body>
 
 </html>
-{{ end }}

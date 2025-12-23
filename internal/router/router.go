@@ -1,17 +1,21 @@
 package router
 
 import (
+	"go-micro-blog/internal/controller"
 	"net/http"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 )
 
-func Register(r *gin.Engine) {
-	// 健康检查
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "pong"})
+func InitRouter(r *gin.Engine, mode string, wg *sync.WaitGroup) *gin.Engine {
+	// 如果是发布模式
+	if mode == gin.ReleaseMode {
+		gin.SetMode(mode)
+	}
+	r.GET("ping", func(c *gin.Context) {
+		c.String(200, "pong")
 	})
-
 	// 首页
 	r.GET("/", func(c *gin.Context) {
 		posts := []gin.H{
@@ -27,9 +31,17 @@ func Register(r *gin.Engine) {
 			},
 		}
 
-		c.HTML(http.StatusOK, "index.html", gin.H{
-			"Title": "Home",
+		// 注意：这里渲染的是定义了整个 HTML 结构的那个模板名
+		c.HTML(http.StatusOK, "base.html", gin.H{
+			"Title": "首页",
 			"Posts": posts,
 		})
 	})
+	r.GET("/admin/create", controller.RenderCreateArticle) // 渲染创建文章页面
+	apiGroup := r.Group("/api")
+	InitArticleRoutes(apiGroup)
+	// InitMessageRoutes(apiGroup)
+	// InitCommentRoutes(apiGroup)
+	return r
 }
+
