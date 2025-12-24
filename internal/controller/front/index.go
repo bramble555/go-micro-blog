@@ -1,18 +1,19 @@
 package front
 
-// import (
-// 	"net/http"
+import (
+	"go-micro-blog/internal/service"
+	"net/http"
 
-// 	"github.com/gin-gonic/gin"
-// )
+	"github.com/gin-gonic/gin"
+)
 
-// func Index(c *gin.Context) {
-// 	role, _ := c.Get("role")
+func Index(c *gin.Context) {
+	role, _ := c.Get("role")
 
-// 	articles, _ := service.GetArticleList()
+	articles, _ := service.GetArticleList()
 
-// 	c.HTML(http.StatusOK, "index.html", gin.H{
-// 		"Articles": articles,
-// 		"IsAdmin":  role == "admin",
-// 	})
-// }
+	c.HTML(http.StatusOK, "index.html", gin.H{
+		"Articles": articles,
+		"IsAdmin":  role == "admin",
+	})
+}

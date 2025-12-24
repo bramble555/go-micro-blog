@@ -5,6 +5,8 @@ import (
 
 	"go-micro-blog/global"
 	"go-micro-blog/internal/model"
+
+	"go.uber.org/zap"
 )
 
 // CreateArticle 创建文章
@@ -32,4 +34,39 @@ func CreateArticle(title string, summary string, content string) (*model.Article
 
 	// 4️⃣ 返回创建好的文章（带 ID）
 	return article, nil
+}
+
+func GetArticleList() ([]model.Article, error) {
+	var articles []model.Article
+
+	err := global.DB.
+		Model(&model.Article{}).
+		Where("status = ?", 1).
+		Order("created_at DESC").
+		Find(&articles).Error
+
+	if err != nil {
+		global.Log.Error("查询文章列表失败", zap.Error(err))
+		return nil, err
+	}
+	return articles, nil
+}
+
+// GetArticleByID 根据 ID 获取单篇文章详情
+func GetArticleByID(id string) (*model.Article, error) {
+	var article model.Article
+
+	// 使用 First 查询单条记录
+	// id 会自动从 string 转换为数据库匹配的类型
+	err := global.DB.
+		Model(&model.Article{}).
+		Where("id = ?", id).
+		First(&article).Error
+
+	if err != nil {
+		global.Log.Error("查询文章详情失败", zap.String("id", id), zap.Error(err))
+		return nil, err
+	}
+
+	return &article, nil
 }

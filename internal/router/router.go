@@ -14,52 +14,32 @@ func InitRouter(r *gin.Engine, mode string, wg *sync.WaitGroup) *gin.Engine {
 	if mode == gin.ReleaseMode {
 		gin.SetMode(mode)
 	}
-
-	// ==========================================
-	// 1. 公开区域：所有人可见 (无需任何中间件)
-	// ==========================================
-
 	// 基础测试
 	r.GET("ping", func(c *gin.Context) {
 		c.String(200, "pong")
 	})
 
-	// 首页渲染
+	// 1. 首页渲染：只返回 HTML 结构
 	r.GET("/", func(c *gin.Context) {
-		// 临时数据，后续从 Service 获取
-		posts := []gin.H{
-			{
-				"Title":   "Go 微型博客系统设计",
-				"Summary": "基于 Gin + Redis + Snowflake 的高性能博客系统。",
-				"Date":    "2025-03-01",
-			},
-			{
-				"Title":   "为什么选择 Go 作为后端语言",
-				"Summary": "从并发模型到工程实践，聊聊 Go 的优势。",
-				"Date":    "2025-03-02",
-			},
-		}
-
 		c.HTML(http.StatusOK, "base.html", gin.H{
-			"Title":   "首页",
-			"Posts":   posts,
-			"IsAdmin": false, // 后续可以通过 cookie 或 session 判断
+			"Title": "首页",
+			// 这里不需要再传 Posts 数组了，让前端去请求 API
 		})
 	})
 
 	// 🔑 登录页面 (GET)：显示 HTML 界面
-	// 🚨 注意：这里一定要用 RenderLogin
 	r.GET("/admin/login", controller.RenderLogin)
 
 	// 📡 公开 API 分组
+	// --- 页面路由 (用于返回 HTML 壳子) ---
 	apiPublic := r.Group("/api")
 	{
 		// 登录动作 (POST)：接收 JSON 账号密码，签发 Token
 		apiPublic.POST("/login", controller.Login)
 
 		// 获取文章列表/详情 (所有人可见)
-		// apiPublic.GET("/articles", controller.GetArticleList)
-		// apiPublic.GET("/articles/:id", controller.GetArticleDetail)
+		apiPublic.GET("/articles", controller.GetArticleList)
+		apiPublic.GET("/articles/:id", controller.GetArticleDetail)
 	}
 
 	// ==========================================
