@@ -1,0 +1,80 @@
+{{ define "admin/login.html" }}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>管理员登录</title>
+    <style>
+        body {
+            background-color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: sans-serif;
+        }
+
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-card">
+        <h2 style="text-align: center;">管理员登录</h2>
+        <input type="text" id="username" placeholder="用户名">
+        <input type="password" id="password" placeholder="密码">
+        <button onclick="doLogin()">登录</button>
+    </div>
+
+    <script>
+        async function doLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await res.json();
+            if (data.code === 200) { // 假设你成功的 code 是 200
+                localStorage.setItem('token', data.data.token);
+                alert('登录成功！');
+                window.location.href = '/'; // 登录成功跳回首页
+            } else {
+                alert('登录失败：' + data.msg);
+            }
+        }
+    </script>
+</body>
+
+</html>
+{{ end }}
