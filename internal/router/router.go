@@ -2,6 +2,7 @@ package router
 
 import (
 	"go-micro-blog/internal/controller"
+	"go-micro-blog/internal/controller/front"
 	"go-micro-blog/internal/middleware"
 	"net/http"
 	"sync"
@@ -23,12 +24,11 @@ func InitRouter(r *gin.Engine, mode string, wg *sync.WaitGroup) *gin.Engine {
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "base.html", gin.H{
 			"Title": "首页",
-			// 这里不需要再传 Posts 数组了，让前端去请求 API
 		})
 	})
-
 	// 🔑 登录页面 (GET)：显示 HTML 界面
 	r.GET("/admin/login", controller.RenderLogin)
+	// 🚀 在加载静态文件和模板的代码附近增加
 
 	// 📡 公开 API 分组
 	// --- 页面路由 (用于返回 HTML 壳子) ---
@@ -40,6 +40,9 @@ func InitRouter(r *gin.Engine, mode string, wg *sync.WaitGroup) *gin.Engine {
 		// 获取文章列表/详情 (所有人可见)
 		apiPublic.GET("/articles", controller.GetArticleList)
 		apiPublic.GET("/articles/:id", controller.GetArticleDetail)
+		// 🚀 修改这里：去掉多余层级，保持简单
+		apiPublic.GET("/comments", front.GetComments)    // 获取评论列表
+		apiPublic.POST("/comments", front.CreateComment) // 提交评论
 	}
 
 	// ==========================================
@@ -47,11 +50,12 @@ func InitRouter(r *gin.Engine, mode string, wg *sync.WaitGroup) *gin.Engine {
 	// ==========================================
 
 	// 🔴 管理员页面渲染分组
-	adminPage := r.Group("/admin")
-	adminPage.Use(middleware.JWTAuth()) // 挂载严格校验中间件
+	admin := r.Group("/admin")
+	admin.Use(middleware.JWTAuth()) // 挂载严格校验中间件
 	{
 		// 只有带 Token 的管理员才能看写文章页面
-		adminPage.GET("/create", controller.RenderCreateArticle)
+		admin.GET("/create", controller.RenderCreateArticle)
+		admin.POST("/comments/:id/delete", controller.DeleteComment)
 	}
 
 	// 🔴 管理员操作 API 分组

@@ -1,13 +1,32 @@
-{{ define "header" }}
-<header class="bg-white shadow">
-    <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between">
-        <h1 class="text-xl font-bold text-blue-600">
-            Go Micro Blog
-        </h1>
-        <nav class="space-x-4">
-            <a href="/" class="text-gray-600 hover:text-blue-600">首页</a>
-            <a href="/about" class="text-gray-600 hover:text-blue-600">关于</a>
-        </nav>
+<h2 class="text-xl font-bold mt-8">评论</h2>
+
+<div class="mt-4 space-y-4">
+    {{ range .Comments }}
+    <div class="border p-3 rounded">
+        <div class="text-sm text-gray-600">
+            {{ .Nickname }} · {{ .CreatedAt.Format "2006-01-02 15:04" }}
+            {{ if $.IsAdmin }}
+            <form method="post" action="/admin/comments/{{ .ID }}/delete" style="display:inline">
+                <button class="text-red-500 text-xs ml-2">删除</button>
+            </form>
+            {{ end }}
+        </div>
+        <p class="mt-1">{{ .Content }}</p>
     </div>
-</header>
-{{ end }}
+    {{ else }}
+    <p class="text-gray-500">暂无评论</p>
+    {{ end }}
+</div>
+
+<hr class="my-6">
+
+<h3 class="font-semibold">发表评论</h3>
+<form method="post" action="/articles/{{ .Article.ID }}/comments" class="space-y-3 mt-3">
+    <input name="nickname" placeholder="昵称（可选）" class="border w-full px-2 py-1 rounded">
+
+    <textarea name="content" placeholder="评论内容" class="border w-full px-2 py-1 rounded" required></textarea>
+
+    <button class="bg-blue-600 text-white px-4 py-1 rounded">
+        提交评论
+    </button>
+</form>

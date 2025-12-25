@@ -3,7 +3,7 @@
 
 <style>
     body {
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        font-family: 'Inter', sans-serif;
         background-color: #f9fafb;
     }
 
@@ -12,198 +12,226 @@
         border: 1px solid #e5e7eb;
         border-radius: 16px;
         padding: 24px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.3s;
         cursor: pointer;
-        position: relative;
+        margin-bottom: 20px;
     }
 
     .article-card:hover {
         transform: translateY(-4px);
         border-color: #3b82f6;
-        box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     }
 
     .detail-container {
         max-width: 800px;
         margin: 0 auto;
         background: white;
-        padding: 48px;
+        padding: 40px;
         border-radius: 24px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         border: 1px solid #f3f4f6;
     }
 
-    .detail-title {
-        font-size: 2.25rem;
-        font-weight: 800;
-        color: #111827;
-        line-height: 1.2;
-        margin-bottom: 1.5rem;
-    }
-
-    .detail-meta {
-        display: flex;
-        align-items: center;
-        color: #6b7280;
-        font-size: 0.875rem;
-        margin-bottom: 2rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid #f3f4f6;
-    }
-
     .detail-body {
-        font-size: 1.125rem;
+        font-size: 1.1rem;
         line-height: 1.8;
         color: #374151;
         white-space: pre-wrap;
-        word-break: break-word;
+        margin-bottom: 40px;
+    }
+
+    .comment-box {
+        margin-top: 40px;
+        padding-top: 30px;
+        border-top: 2px solid #f3f4f6;
+    }
+
+    .comment-item {
+        padding: 15px 0;
+        border-bottom: 1px solid #f9fafb;
+    }
+
+    .comment-user {
+        font-weight: 700;
+        color: #111827;
+        font-size: 14px;
+    }
+
+    .comment-text {
+        color: #4b5563;
+        margin-top: 5px;
+        font-size: 15px;
     }
 
     .back-link {
         display: inline-flex;
         align-items: center;
         color: #3b82f6;
-        font-weight: 600;
-        margin-bottom: 2rem;
-        transition: transform 0.2s;
         cursor: pointer;
-    }
-
-    .back-link:hover {
-        transform: translateX(-4px);
+        font-weight: 600;
+        margin-bottom: 20px;
     }
 </style>
 
-<div class="container mx-auto py-12" style="max-width: 1000px; margin: 0 auto; padding: 0 20px;">
+<div class="container mx-auto py-12" style="max-width: 900px; margin: 0 auto; padding: 0 20px;">
     <div id="list-view">
-        <div style="margin-bottom: 40px; display: flex; justify-content: space-between; align-items: center;">
-            <h1 style="font-size: 32px; font-weight: 800; color: #111827; letter-spacing: -0.025em;">最新文章</h1>
-            <div id="auth-zone" style="display: flex; gap: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+            <h1 style="font-size: 32px; font-weight: 800;">最新文章</h1>
+            <div id="auth-zone">
                 <a href="/admin/login"
-                    style="background-color: #1f2937; color: white; padding: 10px 24px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px;">
-                    管理员登录
-                </a>
+                    style="background: #1f2937; color: white; padding: 10px 20px; border-radius: 10px; text-decoration: none;">管理员登录</a>
             </div>
         </div>
-        <div id="article-list" style="display: grid; grid-template-columns: 1fr; gap: 24px;">
-            <div style="text-align: center; padding: 100px 0; color: #9ca3af;">
-                <p>正在拉取最新内容...</p>
-            </div>
-        </div>
+        <div id="article-list">加载中...</div>
     </div>
 
     <div id="detail-view" style="display: none;">
         <div class="back-link" onclick="handleBackToList()">
-            <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="none" stroke="currentColor"
+            <svg style="width:20px; height:20px; margin-right:8px" fill="none" stroke="currentColor"
                 viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18">
-                </path>
+                <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
             返回列表
         </div>
-
         <article class="detail-container">
-            <h1 id="detail-title" class="detail-title"></h1>
-            <div class="detail-meta">
-                <span id="detail-date"></span>
-                <span style="margin: 0 12px; color: #d1d5db;">|</span>
-                <span>阅读时长约 3 分钟</span>
-            </div>
+            <h1 id="detail-title" style="font-size: 36px; font-weight: 800; margin-bottom: 15px;"></h1>
+            <div id="detail-date" style="color: #9ca3af; margin-bottom: 30px;"></div>
             <div id="detail-content" class="detail-body"></div>
+            <section class="comment-box">
+                <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">评论回复</h3>
+                <textarea id="comment-input" placeholder="撰写你的评论..."
+                    style="width: 100%; height: 100px; padding: 15px; border: 1px solid #e5e7eb; border-radius: 12px; resize: none; margin-bottom: 15px;"></textarea>
+                <div style="text-align: right;">
+                    <button onclick="submitComment()"
+                        style="background: #3b82f6; color: white; padding: 10px 25px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer;">发布评论</button>
+                </div>
+                <div id="comment-list" style="margin-top: 30px;"></div>
+            </section>
         </article>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    let currentArticleId = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. 登录状态
         const token = localStorage.getItem('token');
-        const authZone = document.getElementById('auth-zone');
-        if (token && authZone) {
-            authZone.innerHTML = `
-                <a href="/admin/create" style="background-color: #10b981; color: white; padding: 10px 24px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px;">+ 发布新文章</a>
-                <button onclick="logout()" style="background-color: #ef4444; color: white; padding: 10px 24px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; font-size: 14px;">退出</button>
+        if (token) {
+            document.getElementById('auth-zone').innerHTML = `
+                <a href="/admin/create" style="background:#10b981; color:white; padding:10px 20px; border-radius:10px; text-decoration:none; margin-right:10px;">+ 新文章</a>
+                <button onclick="logout()" style="background:#ef4444; color:white; padding:10px 20px; border-radius:10px; border:none; cursor:pointer;">退出</button>
             `;
         }
-        loadArticles();
 
-        // 🚀 处理浏览器前进/后退
-        window.onpopstate = function (event) {
-            if (event.state && event.state.articleId) {
-                renderDetailContent(event.state.articleId, false);
-            } else {
-                renderListView(false);
-            }
+        // 2. 🚀 关键逻辑：从 URL 参数解析 ID (?id=xxx)
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+
+        if (id) {
+            console.log("检测到详情页参数 ID:", id);
+            renderDetail(id, false);
+        } else {
+            loadArticles();
+        }
+
+        window.onpopstate = (e) => {
+            const params = new URLSearchParams(window.location.search);
+            const pid = params.get('id');
+            if (pid) renderDetail(pid, false);
+            else renderList(false);
         };
     });
 
     async function loadArticles() {
-        const articleList = document.getElementById('article-list');
         try {
             const res = await fetch('/api/articles');
             const result = await res.json();
-            if (result.code === 200 && result.data) {
-                articleList.innerHTML = '';
-                result.data.forEach(post => {
-                    const postDate = post.created_at ? post.created_at.substring(0, 10) : '2025-12-24';
-                    articleList.innerHTML += `
-                        <div class="article-card" onclick="showDetail('${post.id}')">
-                            <h2 style="font-size: 22px; font-weight: 700; color: #111827; margin-bottom: 12px;">${post.title}</h2>
-                            <p style="color: #4b5563; line-height: 1.6; margin-bottom: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${post.summary}</p>
-                            <div style="display: flex; align-items: center; font-size: 13px; color: #9ca3af;">
-                                <svg style="width: 14px; height: 14px; margin-right: 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                ${postDate}
-                            </div>
-                        </div>
-                    `;
-                });
-            }
+            const list = document.getElementById('article-list');
+            list.innerHTML = '';
+            result.data.forEach(post => {
+                list.innerHTML += `
+                    <div class="article-card" onclick="showDetail('${post.id}')">
+                        <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 8px;">${post.title}</h2>
+                        <p style="color: #6b7280; margin-bottom: 12px;">${post.summary}</p>
+                        <span style="font-size: 13px; color: #9ca3af;">📅 ${post.created_at.substring(0, 10)}</span>
+                    </div>
+                `;
+            });
         } catch (err) { console.error(err); }
     }
 
-    // 🚀 入口函数：显示详情并推送 URL
-    function showDetail(id) {
-        renderDetailContent(id, true);
-    }
+    function showDetail(id) { renderDetail(id, true); }
 
-    // 🚀 核心渲染函数
-    async function renderDetailContent(id, pushState) {
+    async function renderDetail(id, push) {
+        currentArticleId = id;
         try {
             const res = await fetch(`/api/articles/${id}`);
             const result = await res.json();
             if (result.code === 200) {
                 document.getElementById('list-view').style.display = 'none';
                 document.getElementById('detail-view').style.display = 'block';
-
                 document.getElementById('detail-title').innerText = result.data.title;
-                document.getElementById('detail-date').innerText = "发布于 " + (result.data.created_at ? result.data.created_at.substring(0, 10) : "");
                 document.getElementById('detail-content').innerText = result.data.content;
+                document.getElementById('detail-date').innerText = "发布于 " + result.data.created_at.substring(0, 10);
 
-                // 推送 URL
-                if (pushState) {
-                    window.history.pushState({ articleId: id }, "", `/article/${id}`);
-                }
+                // 🚀 这里修改 URL 为 ?id=xxx
+                if (push) window.history.pushState({ articleId: id }, "", `/?id=${id}`);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                loadComments(id);
             }
-        } catch (err) { alert("加载失败"); }
+        } catch (err) { alert("加载文章失败"); }
     }
 
-    // 🚀 处理返回按钮
-    function handleBackToList() {
-        renderListView(true);
+    async function loadComments(id) {
+        const cList = document.getElementById('comment-list');
+        cList.innerHTML = '<p style="color: #9ca3af;">正在加载评论...</p>';
+        try {
+            const res = await fetch(`/api/comments?article_id=${id}`);
+            const result = await res.json();
+            if (result.data && result.data.length > 0) {
+                cList.innerHTML = result.data.map(c => `
+                    <div class="comment-item">
+                        <div class="comment-user">游客</div>
+                        <div class="comment-text">${c.content}</div>
+<div style="font-size:12px; color:#d1d5db; margin-top:5px;">
+    ${c.created_at.replace('T', ' ').substring(0, 16)}
+</div>
+                    </div>
+                `).join('');
+            } else {
+                cList.innerHTML = '<p style="color: #9ca3af;">暂无评论，快来抢沙发！</p>';
+            }
+        } catch (err) { cList.innerHTML = ''; }
     }
 
-    function renderListView(pushState) {
+    async function submitComment() {
+        const content = document.getElementById('comment-input').value;
+        if (!content) return alert("请输入内容");
+        try {
+            const res = await fetch('/api/comments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ article_id: currentArticleId, content: content, nickname: "匿名用户" })
+            });
+            const result = await res.json();
+            if (result.code === 200) {
+                document.getElementById('comment-input').value = '';
+                loadComments(currentArticleId);
+            }
+        } catch (err) { alert("网络错误"); }
+    }
+
+    function handleBackToList() { renderList(true); }
+
+    function renderList(push) {
         document.getElementById('list-view').style.display = 'block';
         document.getElementById('detail-view').style.display = 'none';
-        if (pushState) {
-            window.history.pushState({}, "", "/");
-        }
+        if (push) window.history.pushState({}, "", "/");
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function logout() {
-        localStorage.removeItem('token');
-        window.location.href = '/';
-    }
+    function logout() { localStorage.removeItem('token'); window.location.href = '/'; }
 </script>
 {{ end }}

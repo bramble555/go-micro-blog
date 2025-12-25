@@ -74,8 +74,12 @@ func GetArticleDetail(c *gin.Context) {
 		return
 	}
 
-	// 3. 增加阅读量逻辑 (可选)
-	// global.DB.Model(article).Update("view_count", article.ViewCount+1)
+	comments, _ := service.GetCommentsByArticleID(article.ID)
+
+	c.HTML(http.StatusOK, "post.html", gin.H{
+		"Article":  article,
+		"Comments": comments,
+	})
 
 	// 4. 返回成功 JSON
 	c.JSON(http.StatusOK, gin.H{
