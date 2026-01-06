@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Article.Title }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            gap: 12px;
+        }
+        
+        .article-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+        
+        .article-header {
+            margin-bottom: 40px;
+            border-bottom: 3px solid #f3f4f6;
+            padding-bottom: 20px;
+        }
+        
+        .article-title {
+            font-size: 42px;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 15px;
+            line-height: 1.2;
+        }
+        
+        .article-meta {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+        
+        .article-content {
+            font-size: 18px;
+            line-height: 2;
+            color: #374151;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin-bottom: 50px;
+        }
+        
+        .comments-section {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 2px solid #f3f4f6;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 30px;
+        }
+        
+        .comment-form {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        textarea.form-input {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 12px 32px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+            width: 100%;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .comment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .comment-item {
+            background: #f9fafb;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .comment-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .comment-author {
+            font-weight: 700;
+            color: #111827;
+            font-size: 15px;
+        }
+        
+        .comment-time {
+            color: #9ca3af;
+            font-size: 13px;
+        }
+        
+        .comment-content {
+            color: #4b5563;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        .empty-comments {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+            font-size: 16px;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .toast.success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .toast.error {
+            background: #ef4444;
+            color: white;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-btn">← 返回列表</a>
+    
+    <article class="article-container">
+        <!-- 文章头部 -->
+        <div class="article-header">
+            <h1 class="article-title">{{ .Article.Title }}</h1>
+            <div class="article-meta">
+                <span>📅 {{ .Article.CreatedAt.Format "2006-01-02" }}</span>
+                <span>👁️ {{ .Article.ViewCount }} 次浏览</span>
+            </div>
+        </div>
+        
+        <!-- 文章内容 -->
+        <div class="article-content">{{ .Article.Content }}</div>
+        
+        <!-- 评论区 -->
+        <section class="comments-section">
+            <h2 class="section-title">💬 评论区</h2>
+            
+            <!-- 发表评论表单 -->
+            <div class="comment-form">
+                <textarea id="commentInput" class="form-input" placeholder="分享你的想法... (支持Markdown)"></textarea>
+                <button id="submitBtn" class="submit-btn" onclick="submitComment()">
+                    发布评论
+                </button>
+            </div>
+            
+            <!-- 评论列表 -->
+            <div id="commentList" class="comment-list">
+                {{ if .Comments }}
+                    {{ range .Comments }}
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <span class="comment-author">{{ .Nickname }}</span>
+                            <span class="comment-time">{{ .CreatedAt.Format "2006-01-02 15:04" }}</span>
+                        </div>
+                        <div class="comment-content">{{ .Content }}</div>
+                    </div>
+                    {{ end }}
+                {{ else }}
+                    <div class="empty-comments">暂无评论，快来抢沙发！</div>
+                {{ end }}
+            </div>
+        </section>
+    </article>
+    
+    <script>
+        const articleID = "{{ .Article.ID }}";
+        console.log("页面加载，文章ID:", articleID, "类型:", typeof articleID);
+        
+        let isAdmin = false;
+
+        async function fetchMe() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            try {
+                const res = await fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + token } });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.code === 200 && data.data && data.data.roles && data.data.roles.indexOf('admin') !== -1) {
+                        isAdmin = true;
+                    }
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        async function submitComment() {
+            const content = document.getElementById('commentInput').value.trim();
+            
+            if (!content) {
+                showToast('请输入评论内容', 'error');
+                return;
+            }
+            
+            console.log("提交评论，articleID:", articleID);
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '发布中...';
+            
+            try {
+                const token = localStorage.getItem('token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) {
+                    headers['Authorization'] = 'Bearer ' + token;
+                }
+                const res = await fetch('/api/comments', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        article_id: articleID,
+                        content: content
+                    })
+                });
+                
+                const result = await res.json();
+                
+                if (result.code === 200) {
+                    showToast('评论发布成功！', 'success');
+                    document.getElementById('commentInput').value = '';
+                    loadComments();
+                } else {
+                    showToast(result.msg || '发布失败', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('网络错误，请重试', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '发布评论';
+            }
+        }
+        
+        async function loadComments() {
+            try {
+                const url = `/api/comments?article_id=${articleID}`;
+                console.log("加载评论，URL:", url);
+                const res = await fetch(url);
+                const result = await res.json();
+                
+                console.log("评论查询结果:", result);
+                
+                if (result.code === 200 && result.data) {
+                    const list = document.getElementById('commentList');
+                    
+                    if (result.data.length === 0) {
+                        list.innerHTML = '<div class="empty-comments">暂无评论，快来抢沙发！</div>';
+                        return;
+                    }
+                    
+                    list.innerHTML = result.data.map(c => `
+                        <div class="comment-item">
+                            <div class="comment-header">
+                                <span class="comment-author">${c.nickname || '游客'}</span>
+                                <span class="comment-time">${c.created_at.replace('T', ' ').substring(0, 16)}</span>
+                                ${isAdmin ? `<button onclick="deleteComment(${c.id})" style="background:transparent; border:none; color:#ef4444; cursor:pointer; font-size:12px; margin-left:8px">删除</button>` : ''}
+                            </div>
+                            <div class="comment-content">${c.content}</div>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error('加载评论失败:', err);
+            }
+        }
+
+        async function deleteComment(id) {
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch(`/admin/comments/${id}/delete`, {
+                    method: 'POST',
+                    headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+                });
+                if (res.ok) {
+                    showToast('删除成功', 'success');
+                    loadComments();
+                } else {
+                    showToast('删除失败', 'error');
+                }
+            } catch (e) { showToast('删除失败', 'error'); }
+        }
+
+        // 页面加载时刷新评论
+        document.addEventListener('DOMContentLoaded', async () => {
+            await fetchMe();
+            loadComments();
+        });        
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+
+    </script>
+</body>
+</html>

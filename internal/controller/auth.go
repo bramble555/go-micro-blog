@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go-micro-blog/global"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -30,10 +31,10 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// ✅ 生成 JWT（role = admin）
+	// ✅ 生成 JWT（roles = ["admin"]）
 	claims := jwt.MapClaims{
 		"username": req.Username,
-		"role":     "admin",
+		"roles":    []string{"admin"},
 		"exp":      time.Now().Add(24 * time.Hour).Unix(),
 	}
 
@@ -58,6 +59,62 @@ func RenderLogin(c *gin.Context) {
 	c.HTML(http.StatusOK, "admin/login.html", gin.H{
 		"Title": "管理员登录",
 	})
+}
+
+// Me 返回当前用户信息（需要 Authorization header）
+func Me(c *gin.Context) {
+	auth := c.GetHeader("Authorization")
+	if auth == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"code": 401, "msg": "missing auth"})
+		return
+	}
+	parts := strings.SplitN(auth, " ", 2)
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		c.JSON(http.StatusUnauthorized, gin.H{"code": 401, "msg": "invalid auth header"})
+		return
+	}
+	tokenStr := parts[1]
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(global.Config.JWT.Secret), nil
+	})
+	if err != nil || !token.Valid {
+		c.JSON(http.StatusUnauthorized, gin.H{"code": 401, "msg": "invalid token"})
+		return
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"code": 401, "msg": "invalid claims"})
+		return
+	}
+
+	// 提取 username
+	username := ""
+	if u, ok := claims["username"]; ok {
+		username = fmt.Sprintf("%v", u)
+	}
+
+	// 提取 roles
+	roles := []string{}
+	if r, ok := claims["roles"]; ok {
+		switch v := r.(type) {
+		case []interface{}:
+			for _, item := range v {
+				if s, ok := item.(string); ok {
+					roles = append(roles, s)
+				}
+			}
+		case []string:
+			roles = v
+		case string:
+			roles = []string{v}
+		}
+	} else if r, ok := claims["role"]; ok {
+		if s, ok := r.(string); ok {
+			roles = []string{s}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"code": 200, "data": gin.H{"username": username, "roles": roles}})
 }
 
 // RenderCreateArticle 页面渲染

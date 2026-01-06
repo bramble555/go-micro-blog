@@ -23,7 +23,7 @@ CREATE TABLE articles (
 CREATE TABLE comments (
     id BIGINT PRIMARY KEY,
     article_id BIGINT NOT NULL,
-    visitor_id VARCHAR(64) NOT NULL,
+    nickname VARCHAR(100) DEFAULT '游客',
     content VARCHAR(500) NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_article_id (article_id)

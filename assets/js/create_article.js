@@ -1,10 +1,16 @@
-const API_BASE_URL = "/api/articles";
+const API_BASE_URL = "/api/admin/articles";
 
 // 1. 发送文章数据到后端
 async function createArticle(data) {
+    const token = localStorage.getItem('token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) {
+        headers['Authorization'] = 'Bearer ' + token;
+    }
+
     const response = await fetch(API_BASE_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
         body: JSON.stringify(data),
     });
 
@@ -23,10 +29,9 @@ document.getElementById("createArticleForm").addEventListener("submit", async fu
     event.preventDefault();  // 防止默认的表单提交行为
 
     const title = document.getElementById("title").value;
-    const summary = document.getElementById("summary").value;
     const content = document.getElementById("content").value;
 
-    const articleData = { title, summary, content };
+    const articleData = { title, content };
 
     try {
         const response = await createArticle(articleData);

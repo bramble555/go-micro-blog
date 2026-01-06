@@ -10,7 +10,7 @@ import (
 )
 
 // CreateArticle 创建文章
-func CreateArticle(title string, summary string, content string) (*model.Article, error) {
+func CreateArticle(title string, content string) (*model.Article, error) {
 
 	// 1️⃣ 基本参数校验
 	if title == "" || content == "" {
@@ -21,7 +21,6 @@ func CreateArticle(title string, summary string, content string) (*model.Article
 	article := &model.Article{
 		ID:        global.GenID(), // 🔥 核心点
 		Title:     title,
-		Summary:   summary,
 		Content:   content,
 		ViewCount: 0,
 		Status:    1, // 默认发布
@@ -55,18 +54,11 @@ func GetArticleList() ([]model.Article, error) {
 // GetArticleByID 根据 ID 获取单篇文章详情
 func GetArticleByID(id string) (*model.Article, error) {
 	var article model.Article
-
-	// 使用 First 查询单条记录
 	// id 会自动从 string 转换为数据库匹配的类型
-	err := global.DB.
-		Model(&model.Article{}).
-		Where("id = ?", id).
-		First(&article).Error
-
+	err := global.DB.Where("id = ?", id).First(&article).Error
 	if err != nil {
 		global.Log.Error("查询文章详情失败", zap.String("id", id), zap.Error(err))
 		return nil, err
 	}
-
 	return &article, nil
 }

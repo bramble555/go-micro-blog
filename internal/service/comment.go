@@ -26,8 +26,8 @@ func CreateComment(articleID int64, nickname, content string) error {
 	comment := model.Comment{
 		ID:        global.GenID(),
 		ArticleID: articleID,
-		// Nickname:  nickname,
-		Content: content,
+		Nickname:  nickname,
+		Content:   content,
 	}
 
 	return global.DB.Create(&comment).Error
