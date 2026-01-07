@@ -6,7 +6,7 @@
         <div class="text-sm text-gray-600">
             {{ .Nickname }} · {{ .CreatedAt.Format "2006-01-02 15:04" }}
             {{ if $.IsAdmin }}
-            <form method="post" action="/admin/comments/{{ .ID }}/delete" style="display:inline">
+            <form method="post" action="/api/admin/comments/{{ .ID }}/delete" style="display:inline">
                 <button class="text-red-500 text-xs ml-2">删除</button>
             </form>
             {{ end }}

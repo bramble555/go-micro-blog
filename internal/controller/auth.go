@@ -27,7 +27,7 @@ func Login(c *gin.Context) {
 	// ✅ 从配置中校验管理员账号
 	if req.Username != global.Config.Admin.Username ||
 		req.Password != global.Config.Admin.Password {
-		c.JSON(http.StatusUnauthorized, gin.H{"msg": "invalid credentials"})
+		Fail(c, CodeInvalidParam)
 		return
 	}
 
@@ -41,10 +41,9 @@ func Login(c *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenStr, err := token.SignedString([]byte(global.Config.JWT.Secret))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"msg": "token error"})
+		Fail(c, CodeServerBusy)
 		return
 	}
-
 	c.JSON(http.StatusOK, gin.H{
 		"code": 200, // 🚨 必须加上这个，前端才能判断成功
 		"msg":  "登录成功",

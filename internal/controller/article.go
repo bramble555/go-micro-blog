@@ -2,9 +2,11 @@ package controller
 
 import (
 	"go-micro-blog/internal/service"
+	"html/template"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/russross/blackfriday/v2"
 )
 
 // CreateArticle 创建文章
@@ -64,9 +66,14 @@ func GetArticleDetail(c *gin.Context) {
 	// 获取评论列表
 	comments, _ := service.GetCommentsByArticleID(article.ID)
 
+	// Markdown 转 HTML
+	htmlContent := blackfriday.Run([]byte(article.Content))
+	article.Content = string(htmlContent)
+
 	// 渲染 post.html 模板
 	c.HTML(http.StatusOK, "post.html", gin.H{
-		"Article":  article,
-		"Comments": comments,
+		"Article":     article,
+		"HTMLContent": template.HTML(article.Content), // 使用 template.HTML 避免被转义
+		"Comments":    comments,
 	})
 }
