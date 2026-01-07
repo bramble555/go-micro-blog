@@ -36,8 +36,68 @@
         font-size: 1.1rem;
         line-height: 1.8;
         color: #374151;
-        white-space: pre-wrap;
+        white-space: normal;
+        /* Markdown content should wrap normally */
         margin-bottom: 40px;
+    }
+
+    .article-content h1,
+    .article-content h2,
+    .article-content h3 {
+        margin-top: 24px;
+        margin-bottom: 16px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .article-content p {
+        margin-bottom: 16px;
+    }
+
+    .article-content ul,
+    .article-content ol {
+        margin-bottom: 16px;
+        padding-left: 24px;
+    }
+
+    .article-content li {
+        margin-bottom: 8px;
+    }
+
+    .article-content code {
+        background-color: #f3f4f6;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: monospace;
+    }
+
+    .article-content pre {
+        background-color: #1f2937;
+        color: #f9fafb;
+        padding: 16px;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin-bottom: 16px;
+    }
+
+    .article-content pre code {
+        background-color: transparent;
+        padding: 0;
+        color: inherit;
+    }
+
+    .article-content blockquote {
+        border-left: 4px solid #e5e7eb;
+        padding-left: 16px;
+        color: #6b7280;
+        font-style: italic;
+        margin-bottom: 16px;
+    }
+
+    .article-content img {
+        max-width: 100%;
+        border-radius: 8px;
+        margin: 20px 0;
     }
 
     .comment-box {
@@ -71,6 +131,51 @@
         font-weight: 600;
         margin-bottom: 20px;
     }
+
+    /* 阅读进度条样式 */
+    #reading-progress {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 0%;
+        height: 4px;
+        background: linear-gradient(to right, #3b82f6, #10b981);
+        z-index: 9999;
+        transition: width 0.1s ease-out;
+    }
+
+    .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 16px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+    }
+
+    .toast.success {
+        background: #10b981;
+        color: white;
+    }
+
+    .toast.error {
+        background: #ef4444;
+        color: white;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
 </style>
 
 <div class="container mx-auto py-12" style="max-width: 900px; margin: 0 auto; padding: 0 20px;">
@@ -85,13 +190,21 @@
         <div id="article-list">加载中...</div>
     </div>
 
+    <div id="detail-view" style="display: none;">
+        <div id="reading-progress"></div>
+        <div class="back-link" onclick="backToList()">← 返回列表</div>
+        <div id="article-detail" class="detail-container">
+            <!-- 动态渲染内容 -->
+        </div>
+    </div>
 </div>
-
+<script src="/assets/js/article.js"></script>
 <script>
+    let isAdmin = false;
+
     document.addEventListener('DOMContentLoaded', async () => {
         // 1. 尝试使用服务端验证的 /api/me 来判断是否管理员
         const token = localStorage.getItem('token');
-        let isAdmin = false;
         if (token) {
             try {
                 const res = await fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + token } });
@@ -111,8 +224,14 @@
             `;
         }
 
-        // 2. 加载文章列表
-        loadArticles();
+        // 2. 加载文章列表或详情
+        const urlParams = new URLSearchParams(window.location.search);
+        const articleId = urlParams.get('id');
+        if (articleId) {
+            showDetail(articleId);
+        } else {
+            loadArticles();
+        }
     });
 
     async function loadArticles() {
@@ -123,24 +242,239 @@
             list.innerHTML = '';
             result.data.forEach(post => {
                 list.innerHTML += `
-                    <div class="article-card" onclick="showDetail('${post.id}')">
-                        <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 8px;">${post.title}</h2>
-                        <p style="color: #6b7280; margin-bottom: 12px;">${(post.content || '').substring(0, 100)}...</p>
-                        <span style="font-size: 13px; color: #9ca3af;">📅 ${post.created_at.substring(0, 10)}</span>
+                    <div class="article-card" style="position: relative;">
+                        <div onclick="showDetail('${post.id}')">
+                            <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 8px;">${post.title}</h2>
+                            <p style="color: #6b7280; margin-bottom: 12px;">${(post.content || '').substring(0, 100)}...</p>
+                            <span style="font-size: 13px; color: #9ca3af;">📅 ${post.created_at.substring(0, 10)}</span>
+                        </div>
+                        ${isAdmin ? `
+                            <button onclick="confirmDelete('${post.id}', event)" 
+                                style="position: absolute; right: 24px; top: 24px; background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; z-index: 10;">
+                                删除
+                            </button>
+                        ` : ''}
                     </div>
                 `;
             });
         } catch (err) { console.error(err); }
     }
 
-    function showDetail(id) {
-        // 导航到文章详情页面（由后端渲染 post.html）
-        window.location.href = `/api/articles/${id}`;
+    async function confirmDelete(id, event) {
+        if (event) event.stopPropagation();
+        if (!confirm('确定要删除这篇文章吗？此操作不可恢复。')) return;
+
+        try {
+            const result = await deleteArticle(id);
+            if (result.code === 10000 || result.code === 200) {
+                showToast('文章删除成功', 'success');
+                loadArticles();
+            } else {
+                showToast(result.msg || '删除失败', 'error');
+            }
+        } catch (err) {
+            showToast('删除请求失败，请稍后重试', 'error');
+        }
     }
 
-    function logout() { 
-        localStorage.removeItem('token'); 
-        window.location.href = '/'; 
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'slideIn 0.3s ease reverse';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // 计算阅读时间函数
+    function estimateReadingTime(text) {
+        const wordsPerMinute = 250; // 平均阅读速度
+        // 匹配中文字符或英文单词
+        const wordCount = (text.match(/[\u4e00-\u9fa5]|[\w-]+/g) || []).length;
+        const minutes = wordCount / wordsPerMinute;
+
+        if (minutes < 1) return '少于 1 分钟';
+        // 精确到 0.5 分钟
+        return (Math.round(minutes * 2) / 2).toFixed(1) + ' 分钟';
+    }
+
+    // 滚动进度监听
+    function updateProgress() {
+        const detailView = document.getElementById('detail-view');
+        if (detailView.style.display === 'none') return;
+
+        const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const scrolled = (winScroll / height) * 100;
+        const progressBar = document.getElementById('reading-progress');
+        if (progressBar) progressBar.style.width = scrolled + "%";
+    }
+
+    window.onscroll = updateProgress;
+
+    async function showDetail(id) {
+        try {
+            const res = await fetch(`/api/articles/${id}`);
+            const result = await res.json();
+            if (result.code !== 10000) {
+                showToast(result.msg || '获取文章详情失败', 'error');
+                return;
+            }
+
+            const { article, html_content, comments } = result.data;
+            const detail = document.getElementById('article-detail');
+
+            // 计算阅读时间（基于原始 content）
+            const readingTime = estimateReadingTime(article.content || '');
+
+            detail.innerHTML = `
+                <h1 style="font-size: 36px; font-weight: 800; margin-bottom: 16px; color: #111827;">${article.title}</h1>
+                <div style="color: #6b7280; font-size: 14px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #f3f4f6; display: flex; gap: 20px;">
+                    <span>📅 ${article.created_at.substring(0, 10)}</span>
+                    <span>⏱️ 预计阅读时间：${readingTime}</span>
+                </div>
+                <div class="detail-body article-content">${html_content}</div>
+                
+                <div class="comment-box">
+                    <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 24px;">评论区</h3>
+                    
+                    <!-- 发表评论表单 -->
+                    <div class="comment-form" style="background: #f9fafb; padding: 20px; border-radius: 12px; margin-bottom: 30px;">
+                        <textarea id="commentInput" class="form-input" style="width: 100%; min-height: 100px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 12px; font-family: inherit;" placeholder="分享你的想法... (支持Markdown)"></textarea>
+                        <button id="submitBtn" class="submit-btn" onclick="submitComment('${article.id}')" style="width: 100%; background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer;">发布评论</button>
+                    </div>
+
+                    <div id="detail-comments">
+                        <!-- 动态渲染评论列表 -->
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('list-view').style.display = 'none';
+            document.getElementById('detail-view').style.display = 'block';
+            window.scrollTo(0, 0);
+
+            // 加载评论
+            loadComments(article.id);
+
+            // 可选：更新 URL 但不刷新页面
+            history.pushState({ articleId: id }, '', `/?id=${id}`);
+        } catch (err) {
+            console.error(err);
+            showToast('请求失败，请检查网络', 'error');
+        }
+    }
+
+    async function submitComment(articleId) {
+        const content = document.getElementById('commentInput').value.trim();
+        if (!content) {
+            showToast('请输入评论内容', 'error');
+            return;
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '发布中...';
+
+        try {
+            const token = localStorage.getItem('token');
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+
+            const res = await fetch('/api/comments', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                    article_id: articleId.toString(),
+                    content: content
+                })
+            });
+
+            const result = await res.json();
+            if (result.code === 10000) {
+                showToast('评论发布成功！', 'success');
+                document.getElementById('commentInput').value = '';
+                loadComments(articleId);
+            } else {
+                showToast(result.msg || '发布失败', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('网络错误，请重试', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '发布评论';
+        }
+    }
+
+    async function loadComments(articleId) {
+        try {
+            const res = await fetch(`/api/comments?article_id=${articleId}`);
+            const result = await res.json();
+
+            if (result.code === 10000 && result.data) {
+                const list = document.getElementById('detail-comments');
+                if (result.data.length === 0) {
+                    list.innerHTML = '<p style="color: #9ca3af; text-align: center; padding: 20px;">暂无评论，快来抢沙发！</p>';
+                    return;
+                }
+
+                list.innerHTML = result.data.map(c => `
+                    <div class="comment-item">
+                        <div class="comment-user">
+                            ${c.nickname || '游客'} 
+                            <span style="font-weight: 400; color: #9ca3af; font-size: 12px; margin-left: 8px;">${c.created_at.substring(0, 16).replace('T', ' ')}</span>
+                            ${isAdmin ? `<button onclick="deleteComment('${c.id}', '${articleId}')" style="background:transparent; border:none; color:#ef4444; cursor:pointer; font-size:12px; margin-left:8px">删除</button>` : ''}
+                        </div>
+                        <div class="comment-text">${c.content}</div>
+                    </div>
+                `).join('');
+            }
+        } catch (err) {
+            console.error('加载评论失败:', err);
+        }
+    }
+
+    async function deleteComment(id, articleId) {
+        if (!confirm('确定要删除这条评论吗？')) return;
+
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch(`/api/admin/comments/${id}/delete`, {
+                method: 'POST',
+                headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+            });
+            const result = await res.json();
+            if (result.code === 10000) {
+                showToast('删除成功', 'success');
+                loadComments(articleId);
+            } else {
+                showToast(result.msg || '删除失败', 'error');
+            }
+        } catch (e) { showToast('网络请求失败', 'error'); }
+    }
+
+    function backToList() {
+        document.getElementById('detail-view').style.display = 'none';
+        document.getElementById('list-view').style.display = 'block';
+        history.pushState({}, '', '/');
+    }
+
+    // 处理浏览器前进后退
+    window.onpopstate = function (event) {
+        if (event.state && event.state.articleId) {
+            showDetail(event.state.articleId);
+        } else {
+            backToList();
+        }
+    };
+
+    function logout() {
+        localStorage.removeItem('token');
+        window.location.href = '/';
     }
 </script>
 {{ end }}

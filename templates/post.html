@@ -50,6 +50,18 @@
             padding-bottom: 20px;
         }
 
+        /* 阅读进度条样式 */
+        #reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(to right, #3b82f6, #10b981);
+            z-index: 9999;
+            transition: width 0.1s ease-out;
+        }
+
         .article-title {
             font-size: 42px;
             font-weight: 800;
@@ -303,15 +315,27 @@
 </head>
 
 <body>
-    <a href="/" class="back-btn">← 返回列表</a>
+    <div id="reading-progress"></div>
+    <a href="/" class="back-btn">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 10H5M5 10L10 15M5 10L10 5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        返回列表
+    </a>
 
     <article class="article-container">
         <!-- 文章头部 -->
-        <div class="article-header">
+        <div class="article-header" style="position: relative;">
             <h1 class="article-title">{{ .Article.Title }}</h1>
             <div class="article-meta">
                 <span>📅 {{ .Article.CreatedAt.Format "2006-01-02" }}</span>
-                <span>👁️ {{ .Article.ViewCount }} 次浏览</span>
+                <span id="reading-time">⏱️ 预计阅读时间：计算中...</span>
+            </div>
+            <div id="admin-actions" style="position: absolute; right: 0; top: 0; display: none;">
+                <button onclick="confirmDeleteArticle()"
+                    style="background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                    🗑️ 删除文章
+                </button>
             </div>
         </div>
 
@@ -349,6 +373,7 @@
         </section>
     </article>
 
+    <script src="/assets/js/article.js"></script>
     <script>
         const articleID = "{{ .Article.ID }}";
         console.log("页面加载，文章ID:", articleID, "类型:", typeof articleID);
@@ -364,9 +389,29 @@
                     const data = await res.json();
                     if (data.code === 200 && data.data && data.data.roles && data.data.roles.indexOf('admin') !== -1) {
                         isAdmin = true;
+                        const adminActions = document.getElementById('admin-actions');
+                        if (adminActions) adminActions.style.display = 'block';
                     }
                 }
             } catch (e) { /* ignore */ }
+        }
+
+        async function confirmDeleteArticle() {
+            if (!confirm('确定要删除这篇文章吗？此操作不可恢复，所有评论也将被删除。')) return;
+
+            try {
+                const result = await deleteArticle(articleID);
+                if (result.code === 10000 || result.code === 200) {
+                    showToast('文章删除成功', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                } else {
+                    showToast(result.msg || '删除失败', 'error');
+                }
+            } catch (err) {
+                showToast('删除请求失败，请稍后重试', 'error');
+            }
         }
 
         async function submitComment() {
@@ -393,7 +438,7 @@
                     method: 'POST',
                     headers: headers,
                     body: JSON.stringify({
-                        article_id: articleID,
+                        article_id: articleID.toString(),
                         content: content
                     })
                 });
@@ -468,10 +513,44 @@
             } catch (e) { showToast('网络请求失败', 'error'); }
         }
 
+        // 计算阅读时间
+        function calculateReadingTime() {
+            const content = document.querySelector('.article-content').innerText;
+            const wordsPerMinute = 250; // 平均阅读速度
+            // 匹配中文字符或英文单词
+            const wordCount = (content.match(/[\u4e00-\u9fa5]|[\w-]+/g) || []).length;
+            const minutes = wordCount / wordsPerMinute;
+
+            let displayTime;
+            if (minutes < 1) {
+                displayTime = '少于 1 分钟';
+            } else {
+                displayTime = (Math.round(minutes * 2) / 2).toFixed(1) + ' 分钟';
+            }
+
+            const readingTimeElement = document.getElementById('reading-time');
+            if (readingTimeElement) {
+                readingTimeElement.textContent = `⏱️ 预计阅读时间：${displayTime}`;
+            }
+        }
+
+        // 更新进度条
+        function updateReadingProgress() {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            const progressElement = document.getElementById('reading-progress');
+            if (progressElement) {
+                progressElement.style.width = scrolled + '%';
+            }
+        }
+
         // 页面加载时刷新评论
         document.addEventListener('DOMContentLoaded', async () => {
             await fetchMe();
             loadComments();
+            calculateReadingTime();
+            window.addEventListener('scroll', updateReadingProgress);
         });
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');

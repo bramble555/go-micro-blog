@@ -44,22 +44,34 @@ func GetArticleList(c *gin.Context) {
 	Success(c, articles)
 }
 
-// RenderArticleDetail 渲染文章详情 HTML 页面
-func RenderArticleDetail(c *gin.Context) {
-	// 注意：HTML 响应和 JSON 响应通常是分开的接口
-	c.HTML(200, "base.html", gin.H{
-		"Title": "文章详情",
-	})
-}
-
-// GetArticleDetail 处理获取单篇文章数据的 API 请求
-func GetArticleDetail(c *gin.Context) {
-	// 1. 获取路径参数 :id
+// GetArticleDetailAPI 处理获取单篇文章数据的 JSON API 请求
+func GetArticleDetailAPI(c *gin.Context) {
 	id := c.Param("id")
-	// 2. 调用我们之前写好的 service 方法获取数据
 	article, err := service.GetArticleByID(id)
 	if err != nil {
 		Fail(c, CodeServerBusy)
+		return
+	}
+
+	// 获取评论列表
+	comments, _ := service.GetCommentsByArticleID(article.ID)
+
+	// Markdown 转 HTML
+	htmlContent := blackfriday.Run([]byte(article.Content))
+
+	Success(c, gin.H{
+		"article":      article,
+		"html_content": string(htmlContent),
+		"comments":     comments,
+	})
+}
+
+// GetArticleDetail 处理渲染文章详情页面的请求
+func GetArticleDetail(c *gin.Context) {
+	id := c.Param("id")
+	article, err := service.GetArticleByID(id)
+	if err != nil {
+		c.String(http.StatusNotFound, "文章不存在")
 		return
 	}
 
@@ -73,7 +85,15 @@ func GetArticleDetail(c *gin.Context) {
 	// 渲染 post.html 模板
 	c.HTML(http.StatusOK, "post.html", gin.H{
 		"Article":     article,
-		"HTMLContent": template.HTML(article.Content), // 使用 template.HTML 避免被转义
+		"HTMLContent": template.HTML(article.Content),
 		"Comments":    comments,
 	})
+}
+func DeleteArticle(c *gin.Context) {
+	id := c.Param("id")
+	if err := service.DeleteArticle(id); err != nil {
+		Fail(c, CodeServerBusy)
+		return
+	}
+	Success(c, nil)
 }

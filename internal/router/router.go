@@ -27,6 +27,7 @@ func InitRouter(r *gin.Engine, mode string, wg *sync.WaitGroup) *gin.Engine {
 	})
 	// 🔑 登录页面 (GET)：显示 HTML 界面
 	r.GET("/admin/login", controller.RenderLogin)
+	r.GET("/articles/:id", controller.GetArticleDetail)
 
 	// 📡 公开 API 分组
 	apiPublic := r.Group("/api")
@@ -35,7 +36,7 @@ func InitRouter(r *gin.Engine, mode string, wg *sync.WaitGroup) *gin.Engine {
 		apiPublic.POST("/login", controller.Login)
 
 		apiPublic.GET("/articles", controller.GetArticleList)
-		apiPublic.GET("/articles/:id", controller.GetArticleDetail)
+		apiPublic.GET("/articles/:id", controller.GetArticleDetailAPI)
 		// 获取当前用户信息（需要 Authorization header）
 		apiPublic.GET("/me", controller.Me)
 		apiPublic.GET("/comments", controller.GetComments)
@@ -53,6 +54,7 @@ func InitRouter(r *gin.Engine, mode string, wg *sync.WaitGroup) *gin.Engine {
 	{
 		InitArticleRoutes(apiAdminRoutes)
 		apiAdminRoutes.POST("/comments/:id/delete", controller.DeleteComment)
+		apiAdminRoutes.POST("/articles/:id/delete", controller.DeleteArticle)
 	}
 	return r
 }

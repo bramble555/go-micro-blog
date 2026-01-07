@@ -62,3 +62,19 @@ func GetArticleByID(id string) (*model.Article, error) {
 	}
 	return &article, nil
 }
+
+// DeleteArticle 删除文章
+func DeleteArticle(id string) error {
+	// 1️⃣ 校验 ID 是否存在
+	var article model.Article
+	if err := global.DB.Where("id = ?", id).First(&article).Error; err != nil {
+		return err // 文章不存在，返回错误
+	}
+
+	// 2️⃣ 删除文章
+	if err := global.DB.Delete(&article).Error; err != nil {
+		return err // 删除失败，返回错误
+	}
+
+	return nil // 删除成功
+}
