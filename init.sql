@@ -33,7 +33,6 @@ CREATE TABLE comments (
 CREATE TABLE likes (
     id BIGINT PRIMARY KEY,
     article_id BIGINT NOT NULL,
-    visitor_id VARCHAR(64) NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_article_id (article_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

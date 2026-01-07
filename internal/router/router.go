@@ -42,6 +42,8 @@ func InitRouter(r *gin.Engine, mode string, wg *sync.WaitGroup) *gin.Engine {
 		apiPublic.GET("/comments", controller.GetComments)
 		// 提交评论（可选认证，让后端能识别管理员身份）
 		apiPublic.POST("/comments", middleware.JWTAuth(), controller.CreateComment)
+		apiPublic.GET("/likes", controller.GetLikes)
+		apiPublic.POST("/likes", controller.CreateLike)
 
 	}
 
@@ -52,7 +54,7 @@ func InitRouter(r *gin.Engine, mode string, wg *sync.WaitGroup) *gin.Engine {
 	apiAdminRoutes := r.Group("/api/admin")
 	apiAdminRoutes.Use(middleware.RequireAdmin())
 	{
-		InitArticleRoutes(apiAdminRoutes)
+		apiAdminRoutes.POST("articles", controller.CreateArticle)
 		apiAdminRoutes.POST("/comments/:id/delete", controller.DeleteComment)
 		apiAdminRoutes.POST("/articles/:id/delete", controller.DeleteArticle)
 	}
